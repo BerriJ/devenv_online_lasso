@@ -24,9 +24,11 @@ RUN mkdir -p /home/$USERNAME/.vscode-server/extensions \
     /home/$USERNAME/.vscode-server-insiders \
     workspaces
 
+# Install Python
+COPY package_lists/python_packages.txt /package_lists/python_packages.txt
+
 # Ubuntu Setup
-RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections &&\
-    apt-get update &&\
+RUN apt-get update &&\
     apt-get -y --no-install-recommends install \
     ca-certificates \
     git \
@@ -36,31 +38,32 @@ RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula sele
     ninja-build \
     ccache \
     gfortran \
-    # netbase \
     zip \
     unzip \
     curl \
-    # xclip \
     zsh \
-    # gnupg2 \
+    python3-pip  \
+    python3-dev \
     nano \
     gdb \
-    # ssh-client \
-    # fontconfig \
-    # ttf-mscorefonts-installer \
     locales && \
     locale-gen en_US.UTF-8 &&\
     locale-gen de_DE.UTF-8 &&\
     update-locale LANG=en_US.UTF-8 &&\
-    git clone --depth=1 https://github.com/sindresorhus/pure.git /home/$USERNAME/.zsh/pure \
-    && rm -rf /home/$USERNAME/.zsh/pure/.git \
+    git clone --depth=1 https://github.com/sindresorhus/pure.git /home/$USERNAME/.zsh/pure &&\
+    rm -rf /home/$USERNAME/.zsh/pure/.git &&\
+    # Python packages
+    pip3 install -U --no-cache-dir \
+    $(grep -o '^[^#]*' package_lists/python_packages.txt | tr '\n' ' ')  \
     && apt-get autoclean -y \
     && rm -rf /var/lib/apt/lists/*
 
-ENV LC_ALL=en_US.UTF-8 \
+# Set PATH for user installed python packages
+ENV PATH="/home/vscode/.local/bin:${PATH}" \
+    LC_ALL=en_US.UTF-8 \
     LANG=en_US.UTF-8
 
-# Install vcpkg C++ dependency manager
+# # Install vcpkg C++ dependency manager
 RUN git clone --depth=1 https://github.com/Microsoft/vcpkg /usr/local/vcpkg \
     && rm -rf /usr/local/vcpkg/.git \
     && cd /usr/local/vcpkg \
@@ -68,7 +71,9 @@ RUN git clone --depth=1 https://github.com/Microsoft/vcpkg /usr/local/vcpkg \
     && ./vcpkg integrate install \
     && /usr/local/vcpkg/vcpkg install armadillo \
     && /usr/local/vcpkg/vcpkg install pybind11 \
-    && chown --recursive $USERNAME:$USERNAME /usr/local/vcpkg
+    && chown --recursive $USERNAME:$USERNAME /usr/local/vcpkg &&\
+    mkdir /home/$USERNAME/.ccache &&\
+    chown -R $USERNAME /home/$USERNAME/.ccache
 
 ENV PATH="/usr/local/vcpkg:${PATH}"
 
@@ -82,25 +87,7 @@ RUN git clone --depth=1 https://github.com/RUrlus/carma.git /usr/local/carma \
     && cmake --build . --config Release --target install \
     && rm -rf /usr/local/carma
 
-# Install Python
-COPY package_lists/python_packages.txt /package_lists/python_packages.txt
-
-RUN apt-get update &&\
-    apt-get -y --no-install-recommends install \
-    python3-pip  \
-    python3-dev && \
-    # Python packages
-    pip3 install -U --no-cache-dir \
-    $(grep -o '^[^#]*' package_lists/python_packages.txt | tr '\n' ' ')  \
-    && apt-get autoclean -y \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set PATH for user installed python packages
-ENV PATH="/home/vscode/.local/bin:${PATH}"
-
 COPY --chown=$USERNAME .misc/.zshrc /home/$USERNAME/.
-
-RUN mkdir /home/$USERNAME/.ccache && chown -R $USERNAME /home/$USERNAME/.ccache
 COPY --chown=$USERNAME .misc/ccache.conf /home/$USERNAME/.ccache/.
 
 RUN chown -R $USERNAME /usr/local/lib

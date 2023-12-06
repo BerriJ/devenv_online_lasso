@@ -16,3 +16,11 @@ Run the container with the following command:
 ```bash
 docker run -it --rm dolasso:latest
 ```
+
+### Save
+
+Save the container with the following command:
+
+```bash
+docker save -o dolasso_latest.tar dolasso:latest
+```
