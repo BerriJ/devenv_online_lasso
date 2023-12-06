@@ -1,0 +1,41 @@
+{
+    "name": "DevEnv",
+    "image": "devenv_online_lasso:latest",
+    "customizations": {
+        "vscode": {
+            // Extensions will get installed automatically
+            "extensions": [
+                // C++
+                "ms-vscode.cpptools-extension-pack",
+                // Python
+                "ms-python.vscode-pylance",
+                "ms-python.python",
+                "ms-python.black-formatter",
+                "visualstudioexptteam.vscodeintellicode",
+                "ms-toolsai.jupyter",
+                // Copilot
+                "GitHub.copilot"
+            ],
+            // Set *default* container specific settings
+            // Important for radian and latex
+            "settings": {
+                // C++
+                "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+                "cmake.configureSettings": {
+                    "CMAKE_TOOLCHAIN_FILE": "/usr/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                },
+                // Python
+                // "python.dataScience.notebookFileRoot": "${workspaceFolder}/code",
+                "python.pythonPath": "/usr/bin/python3",
+                "python.dataScience.interactiveWindowMode": "perFile",
+                "python.dataScience.sendSelectionToInteractiveWindow": true,
+                // Format code as you type
+                "editor.formatOnPaste": true,
+                "editor.formatOnType": true,
+                "editor.formatOnSave": true,
+                // Hide .gitignore files
+                "explorer.excludeGitIgnore": true
+            }
+        }
+    }
+}
